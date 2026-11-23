@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 
-const ASCII_CHARS = "0123456789!<>-_\\/[]{}—=+*^?#________";
+const ASCII_CHARS = "0123456789!<>-_\\/[]{}=+*^?#________";
 
 export function useScrambleText(originalText: string, speed = 25) {
   const [displayText, setDisplayText] = useState(originalText);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useSoundEffects } from "../hooks/useSoundEffects";
+import { SectionLabel } from "./Editorial";
 
 type AsciiMode = "donut" | "wave" | "matrix" | "sphere";
 
@@ -9,8 +9,9 @@ export function AsciiPlayground() {
   const [mode, setMode] = useState<AsciiMode>("donut");
   const [output, setOutput] = useState<string>("");
   const [densityChar, setDensityChar] = useState<string>("default");
-  const { playClick, playBlip } = useSoundEffects();
+  const [motionActive, setMotionActive] = useState(false);
   const reqRef = useRef<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const stateRef = useRef({
     A: 0,
     B: 0,
@@ -21,7 +22,6 @@ export function AsciiPlayground() {
 
   const chars = densityChar === "heavy" ? "@#%*+=-:. " : densityChar === "cyber" ? "10/\\<>[]{} " : ".,-~:;=!*#$@";
 
-  // Donut Generator
   const renderDonut = useCallback((width: number, height: number) => {
     stateRef.current.A += 0.04;
     stateRef.current.B += 0.025;
@@ -65,7 +65,6 @@ export function AsciiPlayground() {
     return res;
   }, [chars]);
 
-  // Sine Waveform
   const renderWave = useCallback((width: number, height: number) => {
     stateRef.current.wavePhase += 0.08;
     const { wavePhase } = stateRef.current;
@@ -81,7 +80,6 @@ export function AsciiPlayground() {
         const idx = x + y * width;
         b[idx] = "●";
 
-        // Vertical harmonic tracer lines
         for (let traceY = y + 1; traceY < height; traceY += 2) {
           const tIdx = x + traceY * width;
           if (b[tIdx] === " ") b[tIdx] = "·";
@@ -97,7 +95,6 @@ export function AsciiPlayground() {
     return res;
   }, []);
 
-  // Matrix Rain
   const matrixDrops = useRef<number[]>([]);
   const renderMatrix = useCallback((width: number, height: number) => {
     if (matrixDrops.current.length !== width) {
@@ -131,7 +128,6 @@ export function AsciiPlayground() {
     return res;
   }, []);
 
-  // Sphere 3D
   const renderSphere = useCallback((width: number, height: number) => {
     stateRef.current.A += 0.03;
     stateRef.current.B += 0.02;
@@ -146,7 +142,6 @@ export function AsciiPlayground() {
         const y = radius * Math.sin(theta) * Math.sin(phi);
         const z = radius * Math.cos(theta);
 
-        // Rotate
         const x1 = x * Math.cos(B) - z * Math.sin(B);
         const z1 = x * Math.sin(B) + z * Math.cos(B);
 
@@ -174,19 +169,44 @@ export function AsciiPlayground() {
   }, [chars]);
 
   useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let visible = false;
+    const update = () => setMotionActive(visible && !media.matches);
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    });
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    media.addEventListener("change", update);
+
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", update);
+    };
+  }, []);
+
+  useEffect(() => {
     const width = 52;
     const height = 20;
+    const renderFrame = () => {
+      if (mode === "donut") return renderDonut(width, height);
+      if (mode === "wave") return renderWave(width, height);
+      if (mode === "matrix") return renderMatrix(width, height);
+      return renderSphere(width, height);
+    };
+
+    if (!motionActive) {
+      const initialFrame = requestAnimationFrame(() => setOutput(renderFrame()));
+      return () => cancelAnimationFrame(initialFrame);
+    }
 
     let lastTick = 0;
-    const interval = mode === "matrix" ? 50 : 33; // ~30-20fps for authentic retro terminal feel
+    const interval = mode === "matrix" ? 50 : 33;
 
     const loop = (time: number) => {
       if (time - lastTick > interval) {
         lastTick = time;
-        if (mode === "donut") setOutput(renderDonut(width, height));
-        else if (mode === "wave") setOutput(renderWave(width, height));
-        else if (mode === "matrix") setOutput(renderMatrix(width, height));
-        else if (mode === "sphere") setOutput(renderSphere(width, height));
+        setOutput(renderFrame());
       }
       reqRef.current = requestAnimationFrame(loop);
     };
@@ -195,29 +215,24 @@ export function AsciiPlayground() {
     return () => {
       if (reqRef.current) cancelAnimationFrame(reqRef.current);
     };
-  }, [mode, renderDonut, renderWave, renderMatrix, renderSphere]);
+  }, [mode, motionActive, renderDonut, renderWave, renderMatrix, renderSphere]);
 
   return (
-    <section id="lab" className="py-20 brutalist-border-b bg-[#141618]">
+    <section ref={sectionRef} id="lab" className="lab-section folio-section">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        <SectionLabel number="03" aside="AN OPEN EXPERIMENT / TRY THE CONTROLS">THE PLAYGROUND</SectionLabel>
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 pb-4 brutalist-border-b">
           <div>
-            <div className="font-mono text-xs text-[#7aa287] uppercase tracking-widest mb-1">
-              /* 03 // INTERACTIVE EXPERIMENT */
-            </div>
             <h2 className="text-3xl sm:text-5xl md:text-6xl font-display font-extrabold text-[#edece6] tracking-tight uppercase">
-              ASCII MATRIX LAB
+              TYPE IN MOTION.
             </h2>
           </div>
           <div className="mt-3 md:mt-0 font-mono text-xs text-[#a2a7af]">
-            REAL-TIME TEXT-MODE RASTERIZER // 0-CANVAS OVERHEAD
+            NOT EVERYTHING NEEDS TO BE SERIOUS.
           </div>
         </div>
 
-        {/* Interactive Workspace */}
         <div className="lab-terminal-container flex flex-col lg:grid lg:grid-cols-12 gap-6 items-stretch">
-          {/* Main ASCII Screen (Cols 1-8) */}
           <div className="lg:col-span-8 bg-[#0c0d0e] border border-[#25282e] p-3.5 sm:p-5 shadow-2xl flex flex-col justify-between">
             <div className="flex items-center justify-between font-mono text-[10px] sm:text-[11px] text-[#646872] pb-3 border-b border-[#25282e]">
               <div className="flex items-center space-x-2">
@@ -227,9 +242,9 @@ export function AsciiPlayground() {
               <span>BUFFER: 52×20</span>
             </div>
 
-            {/* ASCII Output Screen */}
             <div className="my-3 sm:my-4 p-2 sm:p-4 bg-[#0c0d0e] border border-[#25282e]/50 flex items-center justify-center overflow-x-auto min-h-[260px] sm:min-h-[300px]">
               <pre
+                aria-hidden="true"
                 className={`font-mono text-[8px] xs:text-[9.5px] sm:text-[11px] md:text-xs leading-none select-none tracking-normal ${
                   mode === "wave"
                     ? "text-[#62829a]"
@@ -242,16 +257,15 @@ export function AsciiPlayground() {
               >
                 {output}
               </pre>
+              <span className="sr-only">Animated ASCII preview in {mode} mode.</span>
             </div>
 
-            {/* Bottom Status bar */}
             <div className="pt-2 border-t border-[#25282e] flex flex-wrap items-center justify-between font-mono text-[9px] sm:text-[10px] text-[#646872] gap-1">
               <span>ENCODING: US-ASCII 7-BIT</span>
               <span className="text-[#7aa287]">[ REACTIVE TO TICK ]</span>
             </div>
           </div>
 
-          {/* Control Console (Cols 9-12) */}
           <div className="lg:col-span-4 bg-[#0c0d0e] border border-[#25282e] p-4 sm:p-5 flex flex-col justify-between">
             <div>
               <div className="font-mono text-[10px] text-[#646872] uppercase tracking-wider mb-2.5 sm:mb-3">
@@ -262,8 +276,8 @@ export function AsciiPlayground() {
                   <button
                     key={m}
                     type="button"
+                    aria-pressed={mode === m}
                     onClick={() => {
-                      playClick();
                       setMode(m);
                     }}
                     data-cursor="SELECT"
@@ -281,7 +295,6 @@ export function AsciiPlayground() {
                 ))}
               </div>
 
-              {/* Character set density palette */}
               <div className="mt-6 pt-4 border-t border-[#25282e]">
                 <div className="font-mono text-[10px] text-[#646872] uppercase tracking-wider mb-2">
                   CHARACTER DENSITY PALETTE
@@ -295,8 +308,8 @@ export function AsciiPlayground() {
                     <button
                       key={p.id}
                       type="button"
+                      aria-pressed={densityChar === p.id}
                       onClick={() => {
-                        playBlip(680, 0.02);
                         setDensityChar(p.id);
                       }}
                       className={`w-full text-left p-2 border transition-colors text-[11px] ${

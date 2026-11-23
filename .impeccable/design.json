@@ -1,0 +1,26 @@
+{
+  "palette": {
+    "paper": "#F1F0E8",
+    "ink": "#171916",
+    "accent": "#86AA35",
+    "accentText": "#506C1D",
+    "muted": "#575C51",
+    "rule": "#B9BDB2",
+    "surface": "#E8E8DF"
+  },
+  "typography": {
+    "display": "Michroma",
+    "body": "Geist",
+    "metadata": "Geist Mono"
+  },
+  "layout": {
+    "desktopGutter": "24px",
+    "mobileGutter": "12px",
+    "mobileBreakpoint": "760px"
+  },
+  "motion": {
+    "reducedMotion": true,
+    "nativeScroll": true,
+    "asciiFrameIntervalMs": 65
+  }
+}

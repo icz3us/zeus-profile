@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Syne } from "next/font/google";
+import { Geist, Geist_Mono, Michroma } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,16 +12,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const syne = Syne({
+const syne = Michroma({
   variable: "--font-syne",
   subsets: ["latin"],
-  weight: ["400", "700", "800"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
-  title: "ZEUS / PORTFOLIO — 2026 // Digital Craft × Systems",
+  title: "Zeus | Web Developer & Designer",
   description:
-    "Personal portfolio of Zeus. Design × Development × Experimentation. Web, UI, and architectural digital systems.",
+    "Meet Zeus, a web developer and designer in Manila. Explore scholarship and resort booking projects, skills, and contact details.",
   keywords: [
     "Zeus",
     "Portfolio",
@@ -35,15 +35,15 @@ export const metadata: Metadata = {
   authors: [{ name: "Zeus" }],
   creator: "Zeus",
   openGraph: {
-    title: "ZEUS / PORTFOLIO — 2026",
-    description: "Digital Craft, Systems & Architectural Code.",
+    title: "ZEUS / PORTFOLIO, 2026",
+    description: "Web developer and designer building easy-to-use websites and apps.",
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0d0e",
-  colorScheme: "dark",
+  themeColor: "#F1F0E8",
+  colorScheme: "light",
   width: "device-width",
   initialScale: 1,
 };
@@ -56,10 +56,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} dark`}
+      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-[#0c0d0e] text-[#edece6] font-sans antialiased selection:bg-[#7aa287] selection:text-[#0c0d0e] overflow-x-hidden">
+      <body className="min-h-screen font-sans antialiased">
         {children}
       </body>
     </html>
